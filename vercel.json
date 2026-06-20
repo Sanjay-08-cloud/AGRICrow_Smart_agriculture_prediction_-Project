@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "agri_portal/wsgi.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "150mb",
+        "runtime": "python3.9"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "agri_portal/wsgi.py"
+    }
+  ]
+}
