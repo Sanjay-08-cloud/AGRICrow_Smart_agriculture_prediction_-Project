@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}AgriGrow - Admin Access{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <!-- Left Panel: SaaS Product Showcase -->
+    <div class="auth-showcase">
+        <div class="showcase-glow-1"></div>
+        <div class="showcase-glow-2"></div>
+        <div class="showcase-content">
+            <div class="showcase-logo">
+                <i data-lucide="sprout"></i>
+                <span>AgriGrow</span>
+            </div>
+            
+            <h2 class="showcase-title">Next-Gen Agricultural Intelligence</h2>
+            <p class="showcase-subtitle">Leverage advanced machine learning classifiers to analyze soil composition and optimize crop yield predictions.</p>
+            
+            <div class="showcase-features">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i data-lucide="cpu"></i>
+                    </div>
+                    <div class="feature-text">
+                        <h4>Decision Tree ML Engine</h4>
+                        <p>Real-time inference using a calibrated decision tree classifier trained on organic soil parameters.</p>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i data-lucide="kanban"></i>
+                    </div>
+                    <div class="feature-text">
+                        <h4>Cultivation Pipelines</h4>
+                        <p>Track your recommended crops using our built-in Kanban board, transitioning from idea to harvest.</p>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i data-lucide="database"></i>
+                    </div>
+                    <div class="feature-text">
+                        <h4>Historical Logs & Auditing</h4>
+                        <p>Fully persisted records inside our robust database structure for historical analysis and trend lookup.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="showcase-footer">
+                <p>© 2026 AgriGrow SaaS Platform. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Right Panel: Auth Form -->
+    <div class="auth-form-side">
+        <div class="auth-form-card">
+            <div class="auth-form-header">
+                <div class="mobile-logo">
+                    <i data-lucide="sprout"></i>
+                    <span>AgriGrow</span>
+                </div>
+                <h3 class="auth-form-title">Administrator Sign In</h3>
+                <p class="auth-form-subtitle">Enter your credentials to access the ML dashboard</p>
+            </div>
+
+            <!-- Demo Credentials Helper -->
+            <div class="helper-badge">
+                <div class="helper-badge-header">
+                    <i data-lucide="info"></i>
+                    <span>Demo Credentials</span>
+                </div>
+                <div class="helper-badge-body">
+                    <div class="cred-row">
+                        <span class="cred-label">Username:</span>
+                        <code class="cred-value">admin</code>
+                    </div>
+                    <div class="cred-row">
+                        <span class="cred-label">Password:</span>
+                        <code class="cred-value">adminpassword</code>
+                    </div>
+                </div>
+            </div>
+
+            {% if form.errors %}
+            <div class="error-notification">
+                <i data-lucide="alert-triangle"></i>
+                <span>Incorrect username or password. Please verify.</span>
+            </div>
+            {% endif %}
+
+            <form method="POST" action="{% url 'login' %}" class="auth-form-layout">
+                {% csrf_token %}
+                <div class="form-group-premium">
+                    <label for="id_username">Username</label>
+                    <div class="input-with-icon">
+                        <i data-lucide="user" class="input-icon"></i>
+                        <input type="text" name="username" autofocus required id="id_username" class="form-control-premium" placeholder="e.g. admin">
+                    </div>
+                </div>
+                
+                <div class="form-group-premium">
+                    <div class="label-wrapper">
+                        <label for="id_password">Password</label>
+                    </div>
+                    <div class="input-with-icon">
+                        <i data-lucide="lock" class="input-icon"></i>
+                        <input type="password" name="password" required id="id_password" class="form-control-premium" placeholder="••••••••••••">
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-premium-primary">
+                    <span>Authenticate</span>
+                    <i data-lucide="arrow-right"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

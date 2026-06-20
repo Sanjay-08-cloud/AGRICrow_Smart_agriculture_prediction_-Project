@@ -1,0 +1,691 @@
+{% extends 'base.html' %}
+
+{% block title %}AgriGrow - Crop Recommendation Dashboard{% endblock %}
+
+{% block content %}
+<!-- Bento Grid Layout Container -->
+<div class="bento-grid">
+    
+    <!-- Item 1: Full-Width Title and System Banner (span 12) -->
+    <div class="card bento-item-12 banner-card">
+        <div class="banner-glow"></div>
+        <div class="banner-content">
+            <div>
+                <h2 class="dashboard-title">
+                    <i data-lucide="cpu" class="title-icon"></i>
+                    <span>AgriGrow Recommendation Engine</span>
+                </h2>
+                <p class="dashboard-subtitle">
+                    Intelligent environmental analysis powered by a Decision Tree classifier. Calibrate input variables to generate localized, optimal crop suggestions.
+                </p>
+            </div>
+            
+            <div class="banner-stats">
+                <div class="status-pill">
+                    <i data-lucide="database" class="status-icon database-icon"></i>
+                    <span>Database: <b>MySQL (crop_recommendation)</b></span>
+                </div>
+                <div class="status-pill">
+                    <i data-lucide="shield-check" class="status-icon active-icon"></i>
+                    <span>Status: <b>Active Connection</b></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Item 2: Environmental Parameters Form (span 7) -->
+    <div class="card bento-item-7 input-form-card">
+        <div class="card-header-premium">
+            <h3 class="card-title-premium">
+                <i data-lucide="sliders-horizontal"></i>
+                <span>Environmental Inputs</span>
+            </h3>
+            
+            <!-- Quick Fill Presets -->
+            <div class="presets-container">
+                <span class="presets-label">Load Presets:</span>
+                <div class="presets-pills">
+                    <button type="button" class="preset-pill" onclick="fillPreset(80, 40, 40, 6.2, 24.0, 82.0, 1600.0)">Rice</button>
+                    <button type="button" class="preset-pill" onclick="fillPreset(70, 45, 20, 6.5, 22.0, 70.0, 650.0)">Maize</button>
+                    <button type="button" class="preset-pill" onclick="fillPreset(60, 40, 40, 6.5, 18.0, 60.0, 500.0)">Wheat</button>
+                    <button type="button" class="preset-pill" onclick="fillPreset(40, 20, 30, 7.2, 28.0, 90.0, 1100.0)">Cotton</button>
+                    <button type="button" class="preset-pill" onclick="fillPreset(20, 60, 20, 5.8, 25.0, 65.0, 800.0)">Groundnut</button>
+                </div>
+            </div>
+        </div>
+        
+        <form method="POST" action="{% url 'prediction_dashboard' %}" class="form-layout">
+            {% csrf_token %}
+            
+            <!-- Row 1: Nitrogen, Phosphorus -->
+            <div class="form-row">
+                <div class="form-group-premium">
+                    <label for="{{ form.n.id_for_label }}">Nitrogen (N) in Soil</label>
+                    <div class="input-wrapper-premium">
+                        <i data-lucide="flask-conical"></i>
+                        {{ form.n }}
+                    </div>
+                    {% if form.n.errors %}
+                    <span class="error-text">{{ form.n.errors }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group-premium">
+                    <label for="{{ form.p.id_for_label }}">Phosphorus (P) in Soil</label>
+                    <div class="input-wrapper-premium">
+                        <i data-lucide="atom"></i>
+                        {{ form.p }}
+                    </div>
+                    {% if form.p.errors %}
+                    <span class="error-text">{{ form.p.errors }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Row 2: Potassium, pH Level -->
+            <div class="form-row">
+                <div class="form-group-premium">
+                    <label for="{{ form.k.id_for_label }}">Potassium (K) in Soil</label>
+                    <div class="input-wrapper-premium">
+                        <i data-lucide="test-tube"></i>
+                        {{ form.k }}
+                    </div>
+                    {% if form.k.errors %}
+                    <span class="error-text">{{ form.k.errors }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group-premium">
+                    <label for="{{ form.ph.id_for_label }}">Soil pH Level (0 - 14)</label>
+                    <div class="input-wrapper-premium">
+                        <i data-lucide="gauge"></i>
+                        {{ form.ph }}
+                    </div>
+                    {% if form.ph.errors %}
+                    <span class="error-text">{{ form.ph.errors }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Row 3: Temperature, Humidity -->
+            <div class="form-row">
+                <div class="form-group-premium">
+                    <label for="{{ form.temperature.id_for_label }}">Temperature (°C)</label>
+                    <div class="input-wrapper-premium">
+                        <i data-lucide="thermometer"></i>
+                        {{ form.temperature }}
+                    </div>
+                    {% if form.temperature.errors %}
+                    <span class="error-text">{{ form.temperature.errors }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group-premium">
+                    <label for="{{ form.humidity.id_for_label }}">Relative Humidity (%)</label>
+                    <div class="input-wrapper-premium">
+                        <i data-lucide="droplet"></i>
+                        {{ form.humidity }}
+                    </div>
+                    {% if form.humidity.errors %}
+                    <span class="error-text">{{ form.humidity.errors }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Row 4: Rainfall -->
+            <div class="form-group-premium full-width">
+                <label for="{{ form.rainfall.id_for_label }}">Average Annual Rainfall (mm)</label>
+                <div class="input-wrapper-premium">
+                    <i data-lucide="cloud-rain"></i>
+                    {{ form.rainfall }}
+                </div>
+                {% if form.rainfall.errors %}
+                <span class="error-text">{{ form.rainfall.errors }}</span>
+                {% endif %}
+            </div>
+            
+            <button type="submit" class="btn btn-premium-primary submit-calibration-btn">
+                <i data-lucide="sprout"></i>
+                <span>Generate ML Recommendation</span>
+            </button>
+        </form>
+    </div>
+
+    <!-- Item 3: Hero Output Display Card (span 5) -->
+    <div class="bento-item-5 output-display-pane" style="height: 100%;">
+        {% if prediction_result %}
+        <!-- Success recommendation output -->
+        <div class="result-card-premium">
+            <div class="result-card-glow"></div>
+            <div class="result-icon-container animate-bounce-subtle">
+                <i data-lucide="award"></i>
+            </div>
+            <div class="result-body">
+                <p class="result-meta-title">ML Suggested Crop</p>
+                <h3 class="result-badge-premium">{{ prediction_result }}</h3>
+            </div>
+            <p class="result-description">
+                Cultivation parameters are highly suited for growing <b>{{ prediction_result }}</b>. This inference has been successfully recorded in the central database.
+            </p>
+            <div class="result-footer-metrics">
+                <div class="footer-metric-pill">
+                    <i data-lucide="check-circle-2"></i>
+                    <span>Decision Tree Match</span>
+                </div>
+            </div>
+        </div>
+        {% elif error_message %}
+        <!-- Error output -->
+        <div class="card error-card-premium">
+            <div class="error-icon-container">
+                <i data-lucide="alert-triangle"></i>
+            </div>
+            <div class="error-body">
+                <h4>Model Calibrating Failure</h4>
+                <p class="error-description-text">{{ error_message }}</p>
+            </div>
+        </div>
+        {% else %}
+        <!-- Default Empty Awaiting Input state -->
+        <div class="card awaiting-card-premium">
+            <div class="pulsing-leaf-premium">
+                <div class="spinner-pulse"></div>
+                <i data-lucide="hourglass" class="hourglass-rotating"></i>
+            </div>
+            <div class="awaiting-body">
+                <h4>Awaiting Soil Data</h4>
+                <p class="awaiting-description">
+                    Submit environmental parameters manually or load a preset calibration from the panel to compute suggestions in real-time.
+                </p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Item 4: Environmental Targets/Guidelines (span 12) -->
+    <div class="card bento-item-12 guidelines-card-premium">
+        <div class="guidelines-header-premium">
+            <h3 class="card-title-premium" style="border: none; padding: 0; margin: 0;">
+                <i data-lucide="book-open"></i>
+                <span>Crop Reference Guidelines</span>
+            </h3>
+            <p class="guidelines-subtitle">Standardized nutrient profiles of major cultivation targets used to guide soil calibration.</p>
+        </div>
+        
+        <div class="guidelines-grid-premium">
+            <div class="guideline-card-premium">
+                <div class="guideline-card-header">
+                    <span class="guideline-crop">
+                        <i data-lucide="droplets" class="blue-icon"></i>
+                        <b>Rice</b>
+                    </span>
+                    <span class="guideline-climate wet-climate">Wet Climate</span>
+                </div>
+                <div class="guideline-stats">
+                    <div class="stat-item">N-P-K: <b>80-40-40</b></div>
+                    <div class="stat-item">Soil pH: <b>5.5 - 6.5</b></div>
+                    <div class="stat-item">Temp: <b>20 - 27 °C</b></div>
+                    <div class="stat-item">Rainfall: <b>1500+ mm</b></div>
+                </div>
+            </div>
+
+            <div class="guideline-card-premium">
+                <div class="guideline-card-header">
+                    <span class="guideline-crop">
+                        <i data-lucide="sun" class="gold-icon"></i>
+                        <b>Maize (Corn)</b>
+                    </span>
+                    <span class="guideline-climate sunny-climate">Sunny</span>
+                </div>
+                <div class="guideline-stats">
+                    <div class="stat-item">N-P-K: <b>70-45-20</b></div>
+                    <div class="stat-item">Soil pH: <b>5.8 - 7.0</b></div>
+                    <div class="stat-item">Temp: <b>18 - 27 °C</b></div>
+                    <div class="stat-item">Rainfall: <b>500-800 mm</b></div>
+                </div>
+            </div>
+
+            <div class="guideline-card-premium">
+                <div class="guideline-card-header">
+                    <span class="guideline-crop">
+                        <i data-lucide="wind" class="emerald-icon"></i>
+                        <b>Wheat</b>
+                    </span>
+                    <span class="guideline-climate dry-climate">Temperate</span>
+                </div>
+                <div class="guideline-stats">
+                    <div class="stat-item">N-P-K: <b>60-40-40</b></div>
+                    <div class="stat-item">Soil pH: <b>6.0 - 7.0</b></div>
+                    <div class="stat-item">Temp: <b>15 - 25 °C</b></div>
+                    <div class="stat-item">Rainfall: <b>400-600 mm</b></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Item 5: Kanban Layout Crop Management Board (span 12) -->
+    <div class="card bento-item-12 kanban-card-wrapper">
+        <div class="kanban-header-top">
+            <div>
+                <h3 class="card-title-premium" style="border: none; padding: 0; margin: 0;">
+                    <i data-lucide="kanban"></i>
+                    <span>Crop Cultivation Kanban Tracker</span>
+                </h3>
+                <p class="kanban-subtitle">
+                    Manage and transition suggested crops into active stages of cultivation. Pipeline status is updated instantly in the database.
+                </p>
+            </div>
+        </div>
+
+        <!-- Kanban Board Grid -->
+        <div class="kanban-board-premium">
+            
+            <!-- Column 1: Recommended -->
+            <div class="kanban-column-premium col-recommended" id="col-Recommended">
+                <div class="column-header-premium">
+                    <div class="column-title-left">
+                        <span class="status-indicator-dot dot-recommended"></span>
+                        <span>Recommended</span>
+                    </div>
+                    <span class="column-badge-premium" id="badge-Recommended">0</span>
+                </div>
+                <div class="kanban-list-premium" id="list-Recommended">
+                    {% for item in history %}
+                        {% if item.status == 'Recommended' %}
+                            <!-- Kanban Card -->
+                            <div class="kanban-card-premium card-recommended" id="card-{{ item.id }}">
+                                <div class="kanban-card-header">
+                                    <span class="crop-name">
+                                        <i data-lucide="leaf"></i>
+                                        <b>{{ item.predicted_crop }}</b>
+                                    </span>
+                                    <span class="card-date">{{ item.created_at|date:"M d, H:i" }}</span>
+                                </div>
+                                <div class="kanban-card-metrics">
+                                    <div class="metric-badge">NPK: <span>{{ item.n|floatformat:0 }}/{{ item.p|floatformat:0 }}/{{ item.k|floatformat:0 }}</span></div>
+                                    <div class="metric-badge">pH: <span>{{ item.ph|floatformat:1 }}</span></div>
+                                    <div class="metric-badge">Temp: <span>{{ item.temperature|floatformat:1 }}°C</span></div>
+                                    <div class="metric-badge">Rain: <span>{{ item.rainfall|floatformat:0 }}mm</span></div>
+                                </div>
+                                <div class="kanban-card-actions">
+                                    <button class="action-btn btn-cultivate" onclick="transitionCard({{ item.id }}, 'Cultivation')" title="Move to Cultivating">
+                                        <i data-lucide="shovel"></i>
+                                        <span>Cultivate</span>
+                                    </button>
+                                    <button class="action-btn btn-harvest" onclick="transitionCard({{ item.id }}, 'Harvested')" title="Move to Harvested">
+                                        <i data-lucide="check-circle"></i>
+                                        <span>Harvest</span>
+                                    </button>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Column 2: Cultivating -->
+            <div class="kanban-column-premium col-cultivation" id="col-Cultivation">
+                <div class="column-header-premium">
+                    <div class="column-title-left">
+                        <span class="status-indicator-dot dot-cultivation"></span>
+                        <span>Cultivating</span>
+                    </div>
+                    <span class="column-badge-premium" id="badge-Cultivation">0</span>
+                </div>
+                <div class="kanban-list-premium" id="list-Cultivation">
+                    {% for item in history %}
+                        {% if item.status == 'Cultivation' %}
+                            <!-- Kanban Card -->
+                            <div class="kanban-card-premium card-cultivation" id="card-{{ item.id }}">
+                                <div class="kanban-card-header">
+                                    <span class="crop-name">
+                                        <i data-lucide="sprout"></i>
+                                        <b>{{ item.predicted_crop }}</b>
+                                    </span>
+                                    <span class="card-date">{{ item.created_at|date:"M d, H:i" }}</span>
+                                </div>
+                                <div class="kanban-card-metrics">
+                                    <div class="metric-badge">NPK: <span>{{ item.n|floatformat:0 }}/{{ item.p|floatformat:0 }}/{{ item.k|floatformat:0 }}</span></div>
+                                    <div class="metric-badge">pH: <span>{{ item.ph|floatformat:1 }}</span></div>
+                                    <div class="metric-badge">Temp: <span>{{ item.temperature|floatformat:1 }}°C</span></div>
+                                    <div class="metric-badge">Rain: <span>{{ item.rainfall|floatformat:0 }}mm</span></div>
+                                </div>
+                                <div class="kanban-card-actions">
+                                    <button class="action-btn btn-revert" onclick="transitionCard({{ item.id }}, 'Recommended')" title="Move to Recommended">
+                                        <i data-lucide="arrow-left"></i>
+                                        <span>Revert</span>
+                                    </button>
+                                    <button class="action-btn btn-harvest" onclick="transitionCard({{ item.id }}, 'Harvested')" title="Move to Harvested">
+                                        <i data-lucide="check-circle"></i>
+                                        <span>Harvest</span>
+                                    </button>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Column 3: Harvested -->
+            <div class="kanban-column-premium col-harvested" id="col-Harvested">
+                <div class="column-header-premium">
+                    <div class="column-title-left">
+                        <span class="status-indicator-dot dot-harvested"></span>
+                        <span>Harvested</span>
+                    </div>
+                    <span class="column-badge-premium" id="badge-Harvested">0</span>
+                </div>
+                <div class="kanban-list-premium" id="list-Harvested">
+                    {% for item in history %}
+                        {% if item.status == 'Harvested' %}
+                            <!-- Kanban Card -->
+                            <div class="kanban-card-premium card-harvested" id="card-{{ item.id }}">
+                                <div class="kanban-card-header">
+                                    <span class="crop-name">
+                                        <i data-lucide="check-square"></i>
+                                        <b>{{ item.predicted_crop }}</b>
+                                    </span>
+                                    <span class="card-date">{{ item.created_at|date:"M d, H:i" }}</span>
+                                </div>
+                                <div class="kanban-card-metrics">
+                                    <div class="metric-badge">NPK: <span>{{ item.n|floatformat:0 }}/{{ item.p|floatformat:0 }}/{{ item.k|floatformat:0 }}</span></div>
+                                    <div class="metric-badge">pH: <span>{{ item.ph|floatformat:1 }}</span></div>
+                                    <div class="metric-badge">Temp: <span>{{ item.temperature|floatformat:1 }}°C</span></div>
+                                    <div class="metric-badge">Rain: <span>{{ item.rainfall|floatformat:0 }}mm</span></div>
+                                </div>
+                                <div class="kanban-card-actions">
+                                    <button class="action-btn btn-revert" onclick="transitionCard({{ item.id }}, 'Recommended')" title="Move to Recommended">
+                                        <i data-lucide="arrow-left"></i>
+                                        <span>Revert</span>
+                                    </button>
+                                    <button class="action-btn btn-cultivate" onclick="transitionCard({{ item.id }}, 'Cultivation')" title="Move to Cultivating">
+                                        <i data-lucide="shovel"></i>
+                                        <span>Recultivate</span>
+                                    </button>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- CSRF Token helper for fetch requests -->
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Function to fill form with preset parameters
+function fillPreset(n, p, k, ph, temp, hum, rain) {
+    const fields = {
+        'id_n': n,
+        'id_p': p,
+        'id_k': k,
+        'id_ph': ph,
+        'id_temperature': temp,
+        'id_humidity': hum,
+        'id_rainfall': rain
+    };
+    
+    // Smooth value writing animation
+    Object.keys(fields).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.value = fields[id];
+            // Add a brief glow highlight on load
+            el.classList.add('preset-glow-active');
+            setTimeout(() => {
+                el.classList.remove('preset-glow-active');
+            }, 600);
+        }
+    });
+}
+
+// Form scanning overlay logic
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.querySelector('.form-layout');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault(); // Stop normal submit to show high-tech scanning
+            
+            const displayPane = document.querySelector('.output-display-pane');
+            if (displayPane) {
+                displayPane.innerHTML = `
+                    <div class="card scanning-card-premium">
+                        <div class="scanning-scanner"></div>
+                        <div class="scanning-glow"></div>
+                        <div class="scanning-icon-container">
+                            <i data-lucide="cpu" class="rotating-icon"></i>
+                        </div>
+                        <div class="scanning-body">
+                            <h4>ML CALIBRATION IN PROGRESS</h4>
+                            <div class="scanning-steps">
+                                <div class="scanning-step active-step" id="scan-step-1">
+                                    <i data-lucide="circle-dot"></i>
+                                    <span>Ingesting soil chemistry N-P-K...</span>
+                                </div>
+                                <div class="scanning-step" id="scan-step-2">
+                                    <i data-lucide="circle"></i>
+                                    <span>Correlating climate variables...</span>
+                                </div>
+                                <div class="scanning-step" id="scan-step-3">
+                                    <i data-lucide="circle"></i>
+                                    <span>Evaluating Decision Tree rules...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+                
+                // Animate steps
+                setTimeout(() => {
+                    const step1 = document.getElementById('scan-step-1');
+                    const step2 = document.getElementById('scan-step-2');
+                    if (step1 && step2) {
+                        step1.classList.remove('active-step');
+                        step1.classList.add('done-step');
+                        step1.querySelector('i').setAttribute('data-lucide', 'check-circle-2');
+                        
+                        step2.classList.add('active-step');
+                        step2.querySelector('i').setAttribute('data-lucide', 'circle-dot');
+                        if (window.lucide) window.lucide.createIcons();
+                    }
+                }, 400);
+                
+                setTimeout(() => {
+                    const step2 = document.getElementById('scan-step-2');
+                    const step3 = document.getElementById('scan-step-3');
+                    if (step2 && step3) {
+                        step2.classList.remove('active-step');
+                        step2.classList.add('done-step');
+                        step2.querySelector('i').setAttribute('data-lucide', 'check-circle-2');
+                        
+                        step3.classList.add('active-step');
+                        step3.querySelector('i').setAttribute('data-lucide', 'circle-dot');
+                        if (window.lucide) window.lucide.createIcons();
+                    }
+                }, 800);
+                
+                // Form submit after 1.2s
+                setTimeout(() => {
+                    form.submit();
+                }, 1250);
+            } else {
+                form.submit();
+            }
+        });
+    }
+});
+
+// Function to transition cards on the Kanban board via AJAX
+function transitionCard(id, newStatus) {
+    const card = document.getElementById(`card-${id}`);
+    if (!card) return;
+
+    // Send POST request to update status in the MySQL database
+    fetch("{% url 'update_prediction_status' %}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken")
+        },
+        body: JSON.stringify({
+            id: id,
+            status: newStatus
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Success! Transition card in UI
+            const targetList = document.getElementById(`list-${newStatus}`);
+            if (targetList) {
+                // Apply a smooth exit transition
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.85) translateY(10px)';
+                
+                setTimeout(() => {
+                    // Adjust card content/styling based on the new status
+                    updateCardStyling(card, id, newStatus);
+                    
+                    // Move card node in DOM
+                    targetList.prepend(card);
+                    
+                    // Apply smooth entry transition
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'scale(1) translateY(0)';
+                        updateCounts();
+                    }, 50);
+                }, 250);
+            }
+        } else {
+            alert("Error transitioning card: " + (data.error || "Unknown error"));
+        }
+    })
+    .catch(error => {
+        console.error("AJAX Error:", error);
+        alert("Could not update card status. Please check server connection.");
+    });
+}
+
+// Helper to update buttons and icon inside card after moving columns
+function updateCardStyling(card, id, status) {
+    // Update card classes
+    card.className = `kanban-card-premium card-${status.toLowerCase()}`;
+    
+    // Update header icon
+    const titleIconContainer = card.querySelector('.crop-name i');
+    if (titleIconContainer) {
+        if (status === 'Recommended') {
+            titleIconContainer.setAttribute('data-lucide', 'leaf');
+        } else if (status === 'Cultivation') {
+            titleIconContainer.setAttribute('data-lucide', 'sprout');
+        } else if (status === 'Harvested') {
+            titleIconContainer.setAttribute('data-lucide', 'check-square');
+        }
+    }
+    
+    // Update actions panel HTML dynamically
+    const actionsPanel = card.querySelector('.kanban-card-actions');
+    if (actionsPanel) {
+        let actionHtml = '';
+        if (status === 'Recommended') {
+            actionHtml = `
+                <button class="action-btn btn-cultivate" onclick="transitionCard(${id}, 'Cultivation')" title="Move to Cultivating">
+                    <i data-lucide="shovel"></i>
+                    <span>Cultivate</span>
+                </button>
+                <button class="action-btn btn-harvest" onclick="transitionCard(${id}, 'Harvested')" title="Move to Harvested">
+                    <i data-lucide="check-circle"></i>
+                    <span>Harvest</span>
+                </button>
+            `;
+        } else if (status === 'Cultivation') {
+            actionHtml = `
+                <button class="action-btn btn-revert" onclick="transitionCard(${id}, 'Recommended')" title="Move to Recommended">
+                    <i data-lucide="arrow-left"></i>
+                    <span>Revert</span>
+                </button>
+                <button class="action-btn btn-harvest" onclick="transitionCard(${id}, 'Harvested')" title="Move to Harvested">
+                    <i data-lucide="check-circle"></i>
+                    <span>Harvest</span>
+                </button>
+            `;
+        } else if (status === 'Harvested') {
+            actionHtml = `
+                <button class="action-btn btn-revert" onclick="transitionCard(${id}, 'Recommended')" title="Move to Recommended">
+                    <i data-lucide="arrow-left"></i>
+                    <span>Revert</span>
+                </button>
+                <button class="action-btn btn-cultivate" onclick="transitionCard(${id}, 'Cultivation')" title="Move to Cultivating">
+                    <i data-lucide="shovel"></i>
+                    <span>Recultivate</span>
+                </button>
+            `;
+        }
+        actionsPanel.innerHTML = actionHtml;
+    }
+    
+    // Re-create icons for moved card using Lucide
+    if (window.lucide) {
+        window.lucide.createIcons();
+    }
+}
+
+// Function to calculate and update badge counts on headers
+function updateCounts() {
+    const statuses = ['Recommended', 'Cultivation', 'Harvested'];
+    statuses.forEach(status => {
+        const list = document.getElementById(`list-${status}`);
+        const badge = document.getElementById(`badge-${status}`);
+        if (list && badge) {
+            const count = list.querySelectorAll('.kanban-card-premium').length;
+            badge.textContent = count;
+            
+            // Empty state helper text if column is empty
+            const existingEmptyMsg = list.querySelector('.empty-col-msg-premium');
+            if (count === 0) {
+                if (!existingEmptyMsg) {
+                    const emptyMsg = document.createElement('div');
+                    emptyMsg.className = 'empty-col-msg-premium';
+                    emptyMsg.innerHTML = `
+                        <i data-lucide="package-open"></i>
+                        <p>No crops in this phase</p>
+                    `;
+                    list.appendChild(emptyMsg);
+                    if (window.lucide) window.lucide.createIcons();
+                }
+            } else {
+                if (existingEmptyMsg) {
+                    existingEmptyMsg.remove();
+                }
+            }
+        }
+    });
+}
+
+// Initialize on page load
+document.addEventListener("DOMContentLoaded", () => {
+    updateCounts();
+});
+</script>
+{% endblock %}

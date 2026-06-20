@@ -1,0 +1,362 @@
+{% extends 'base.html' %}
+
+{% block title %}AgriGrow - Crop Database Visualization{% endblock %}
+
+{% block content %}
+<div class="bento-grid">
+    
+    <!-- Header Card -->
+    <div class="card bento-item-12 banner-card">
+        <div class="banner-glow"></div>
+        <div class="banner-content">
+            <div>
+                <h2 class="dashboard-title">
+                    <i data-lucide="database" class="title-icon"></i>
+                    <span>Crop Dataset Visualization</span>
+                </h2>
+                <p class="dashboard-subtitle">
+                    Explore and analyze the underlying crop recommendation dataset. Review chemical distributions and climate requirements for major crop classes.
+                </p>
+            </div>
+            
+            <div class="banner-stats">
+                <div class="status-pill">
+                    <i data-lucide="layers"></i>
+                    <span>Total Dataset Rows: <b>{{ total_records }}</b></span>
+                </div>
+                <div class="status-pill">
+                    <i data-lucide="leaf"></i>
+                    <span>Crop Classes: <b>{{ crop_names|length }}</b></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Soil Nutrients (N-P-K) Chart -->
+    <div class="card bento-item-4 chart-card">
+        <div class="card-header-premium">
+            <h3 class="card-title-premium">
+                <i data-lucide="sliders"></i>
+                <span>Soil Nutrients (N-P-K)</span>
+            </h3>
+        </div>
+        <div class="chart-selection-panel">
+            <label for="crop-selector" class="dropdown-label">Select Target Crop:</label>
+            <div class="select-wrapper">
+                <select id="crop-selector" class="select-dropdown" onchange="updateCropNutrientChart()">
+                    {% for crop in crop_names %}
+                        <option value="{{ crop }}">{{ crop|title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="canvas-container">
+            <canvas id="cropNutrientsChart"></canvas>
+        </div>
+        <p class="chart-desc">
+            Examines the Nitrogen, Phosphorus, and Potassium requirements for the selected crop as recorded in the recommendation dataset.
+        </p>
+    </div>
+
+    <!-- Climate Conditions Scatter Chart -->
+    <div class="card bento-item-8 chart-card">
+        <div class="card-header-premium">
+            <h3 class="card-title-premium">
+                <i data-lucide="cloud-sun"></i>
+                <span>Climatic Distribution (Temp vs Rainfall)</span>
+            </h3>
+        </div>
+        <div class="canvas-container scatter-container">
+            <canvas id="climateScatterChart"></canvas>
+        </div>
+        <p class="chart-desc">
+            Scatter plot representing climatic bands of randomly sampled dataset records. Hover over nodes to see the target crop label.
+        </p>
+    </div>
+
+    <!-- Dataset Averages Overview Table -->
+    <div class="card bento-item-12 table-card-premium">
+        <div class="card-header-premium">
+            <h3 class="card-title-premium">
+                <i data-lucide="table"></i>
+                <span>Crop Nutrient and Climatic Profile Averages</span>
+            </h3>
+        </div>
+        <div class="table-wrapper-premium">
+            <table class="data-table-premium">
+                <thead>
+                    <tr>
+                        <th>Crop Label</th>
+                        <th>Nitrogen (N)</th>
+                        <th>Phosphorus (P)</th>
+                        <th>Potassium (K)</th>
+                        <th>Temperature (°C)</th>
+                        <th>Humidity (%)</th>
+                        <th>pH Value</th>
+                        <th>Rainfall (mm)</th>
+                    </tr>
+                </thead>
+                <tbody id="averages-table-body">
+                    <!-- Populated dynamically via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- Custom CSS for Charts & Table -->
+<style>
+.chart-card {
+    padding: 1.5rem;
+    background: rgba(30, 41, 59, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+}
+.canvas-container {
+    position: relative;
+    height: 280px;
+    width: 100%;
+    margin-top: 1rem;
+}
+.scatter-container {
+    height: 330px;
+}
+.chart-selection-panel {
+    margin-top: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+.dropdown-label {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    font-weight: 500;
+}
+.select-wrapper {
+    position: relative;
+    width: 100%;
+}
+.select-dropdown {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.875rem;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.3s;
+}
+.select-dropdown:focus {
+    border-color: #10b981;
+}
+.chart-desc {
+    margin-top: 1rem;
+    font-size: 0.75rem;
+    color: #64748b;
+    line-height: 1.4;
+}
+.table-card-premium {
+    padding: 1.5rem;
+    background: rgba(30, 41, 59, 0.3);
+    border-radius: 16px;
+}
+.table-wrapper-premium {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 1rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.data-table-premium {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.85rem;
+}
+.data-table-premium th, .data-table-premium td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.data-table-premium th {
+    background: rgba(15, 23, 42, 0.6);
+    color: #94a3b8;
+    font-weight: 600;
+}
+.data-table-premium tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+}
+</style>
+
+<!-- Chart.js and rendering scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// JSON loaded from django context
+const summaryData = JSON.parse('{{ summary_data_json|safe }}');
+const sampleData = JSON.parse('{{ sample_data_json|safe }}');
+const cropCounts = JSON.parse('{{ crop_counts_json|safe }}');
+
+let nutrientChartInstance = null;
+let scatterChartInstance = null;
+
+// Render interactive explorer charts on load
+document.addEventListener("DOMContentLoaded", () => {
+    initCharts();
+});
+
+// Render local interactive explorer charts
+function initCharts() {
+    if (summaryData.length === 0) return;
+
+    // 1. Populate summary table body
+    const tbody = document.getElementById('averages-table-body');
+    if (tbody && tbody.children.length === 0) {
+        summaryData.forEach(row => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><b>${row.label.charAt(0).toUpperCase() + row.label.slice(1)}</b></td>
+                <td>${Math.round(row.N)}</td>
+                <td>${Math.round(row.P)}</td>
+                <td>${Math.round(row.K)}</td>
+                <td>${row.temperature.toFixed(1)}°C</td>
+                <td>${row.humidity.toFixed(1)}%</td>
+                <td>${row.ph.toFixed(2)}</td>
+                <td>${Math.round(row.rainfall)}mm</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // 2. Initialize Nutrient Bar Chart
+    const ctxNutrient = document.getElementById('cropNutrientsChart').getContext('2d');
+    if (nutrientChartInstance) {
+        nutrientChartInstance.destroy();
+    }
+    
+    nutrientChartInstance = new Chart(ctxNutrient, {
+        type: 'bar',
+        data: {
+            labels: ['Nitrogen (N)', 'Phosphorus (P)', 'Potassium (K)'],
+            datasets: [{
+                label: 'Optimal Soil Level',
+                data: [0, 0, 0], // updated dynamically
+                backgroundColor: [
+                    'rgba(16, 185, 129, 0.45)', // N
+                    'rgba(59, 130, 246, 0.45)', // P
+                    'rgba(245, 158, 11, 0.45)'  // K
+                ],
+                borderColor: [
+                    '#10b981',
+                    '#3b82f6',
+                    '#f59f0b'
+                ],
+                borderWidth: 2,
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 150,
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { color: '#64748b' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#94a3b8' }
+                }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+
+    updateCropNutrientChart();
+
+    // 3. Initialize Climate Scatter Chart
+    const ctxScatter = document.getElementById('climateScatterChart').getContext('2d');
+    if (scatterChartInstance) {
+        scatterChartInstance.destroy();
+    }
+
+    // Process sample records
+    const scatterData = sampleData.map(row => ({
+        x: row.rainfall,
+        y: row.temperature,
+        crop: row.label
+    }));
+
+    // Group scatter series by crop
+    const crops = [...new Set(scatterData.map(d => d.crop))];
+    const colors = [
+        '#10b981', '#3b82f6', '#f59f0b', '#ec4899', '#8b5cf6', 
+        '#06b6d4', '#14b8a6', '#ef4444', '#eab308', '#a855f7'
+    ];
+    
+    const datasets = crops.map((crop, idx) => {
+        const cropPoints = scatterData.filter(d => d.crop === crop);
+        return {
+            label: crop.charAt(0).toUpperCase() + crop.slice(1),
+            data: cropPoints.map(p => ({x: p.x, y: p.y})),
+            backgroundColor: colors[idx % colors.length] + '80', // semi-transparent
+            borderColor: colors[idx % colors.length],
+            pointRadius: 6,
+            pointHoverRadius: 8
+        };
+    });
+
+    scatterChartInstance = new Chart(ctxScatter, {
+        type: 'scatter',
+        data: { datasets: datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    title: { display: true, text: 'Rainfall (mm)', color: '#94a3b8', font: { weight: 'bold' } },
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { color: '#64748b' }
+                },
+                y: {
+                    title: { display: true, text: 'Temperature (°C)', color: '#94a3b8', font: { weight: 'bold' } },
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { color: '#64748b' }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { color: '#94a3b8', font: { size: 10 } }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            return `${ctx.dataset.label}: Rainfall = ${Math.round(ctx.raw.x)}mm, Temp = ${ctx.raw.y.toFixed(1)}°C`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function updateCropNutrientChart() {
+    const selectedCrop = document.getElementById('crop-selector').value;
+    const cropData = summaryData.find(row => row.label === selectedCrop);
+    
+    if (cropData && nutrientChartInstance) {
+        nutrientChartInstance.data.datasets[0].data = [cropData.N, cropData.P, cropData.K];
+        nutrientChartInstance.update();
+    }
+}
+</script>
+{% endblock %}

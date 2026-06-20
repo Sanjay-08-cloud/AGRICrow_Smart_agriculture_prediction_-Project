@@ -1,0 +1,109 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AgriGrow - Crop Recommendation Engine{% endblock %}</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body class="theme-dark">
+    <div class="app-container">
+        {% if request.user.is_authenticated %}
+        <!-- Left Sidebar Navigation for SaaS platform -->
+        <aside class="app-sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">
+                    <i data-lucide="sprout"></i>
+                </div>
+                <h1 class="brand-name">Agri<span>Grow</span></h1>
+            </div>
+            
+            <div class="sidebar-divider"></div>
+            
+            <nav class="sidebar-nav">
+                <a href="{% url 'prediction_dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'prediction_dashboard' %}active{% endif %}">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{% url 'crop_dataset' %}" class="nav-item {% if request.resolver_match.url_name == 'crop_dataset' %}active{% endif %}">
+                    <i data-lucide="leaf"></i>
+                    <span>Crop Database</span>
+                </a>
+                <a href="{% url 'ml_analytics' %}" class="nav-item {% if request.resolver_match.url_name == 'ml_analytics' %}active{% endif %}">
+                    <i data-lucide="line-chart"></i>
+                    <span>ML Analytics</span>
+                </a>
+                <a href="#" class="nav-item disabled" onclick="return false;">
+                    <i data-lucide="settings"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar">
+                        <span>{{ request.user.username|slice:":2"|upper }}</span>
+                    </div>
+                    <div class="user-info">
+                        <p class="user-name">{{ request.user.username }}</p>
+                        <p class="user-role">Administrator</p>
+                    </div>
+                </div>
+                <a href="{% url 'logout' %}" class="btn-logout-sidebar" title="Log Out">
+                    <i data-lucide="log-out"></i>
+                </a>
+            </div>
+        </aside>
+        {% endif %}
+
+        <!-- Main Workspace Content Wrapper -->
+        <div class="content-wrapper {% if not request.user.is_authenticated %}full-width-auth{% endif %}">
+            {% if request.user.is_authenticated %}
+            <!-- Header for Logged In Admins -->
+            <header class="app-header">
+                <div class="header-left">
+                    <h2 class="header-title">Welcome back, {{ request.user.username }}</h2>
+                    <p class="header-subtitle" id="current-date-time"></p>
+                </div>
+                <div class="header-right">
+                    <div class="status-indicator">
+                        <span class="status-dot green"></span>
+                        <span class="status-text">ML Engine: Active</span>
+                    </div>
+                    <div class="status-indicator">
+                        <span class="status-dot green"></span>
+                        <span class="status-text">MySQL DB: Connected</span>
+                    </div>
+                </div>
+            </header>
+            {% endif %}
+            
+            <main class="main-content">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <!-- Lucide CDN for Beautiful Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        lucide.createIcons();
+        
+        // Add date time script
+        {% if request.user.is_authenticated %}
+        const dateTimeEl = document.getElementById('current-date-time');
+        if (dateTimeEl) {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const today  = new Date();
+            dateTimeEl.textContent = today.toLocaleDateString("en-US", options);
+        }
+        {% endif %}
+    </script>
+</body>
+</html>
