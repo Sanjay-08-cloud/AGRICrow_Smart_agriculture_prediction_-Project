@@ -76,9 +76,16 @@ WSGI_APPLICATION = 'agri_portal.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+database_url = os.environ.get('DATABASE_URL') or os.environ.get('POSTGRES_URL')
+
+if not database_url and os.environ.get('VERCEL') == '1':
+    default_db = f"sqlite:////tmp/db.sqlite3"
+else:
+    default_db = f"sqlite:///{BASE_DIR / 'db.sqlite3'}"
+
 DATABASES = {
     'default': dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        default=default_db if not database_url else database_url,
         conn_max_age=600
     )
 }
